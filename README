@@ -3,3 +3,5 @@ Trying to create a rest api automtically as a wsgi middleware, on the base of a 
 run make nose for test
 include restify.py in your project and add for gae class member
 RestifyMiddleware(get_application(), Member, 'member')
+
+this is of course not safe, you are exposing your model classes as is for the whole world to abuse.
