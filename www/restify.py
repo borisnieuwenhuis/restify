@@ -47,8 +47,7 @@ class RestifyMiddleware(object):
         self.base_path = "/restify"
 
     def __call__(self, environ, start_response):
-
-        if environ['PATH_INFO'] == "%s/%s" % (self.base_path, self.path):
+        if environ['PATH_INFO'].startswith("%s/%s" % (self.base_path, self.path)):
             log.info("request for %s" % (environ['PATH_INFO'], ))
             if environ['REQUEST_METHOD'] == 'POST':
                 start_response('200 OK', [('Content-Type', 'application/json')])
@@ -62,6 +61,10 @@ class RestifyMiddleware(object):
                 new_object.put()
 
                 return [json.dumps(to_dict(new_object))]
+            elif environ['REQUEST_METHOD'] == 'GET':
+                start_response('200 OK', [('Content-Type', 'application/json')])
+                model_list = self.model_class.all()
+                return [json.dumps([to_dict(object) for object in model_list])]
             else:
                 start_response('404 Not found', [('Content-Type', 'text/plain')])
 
