@@ -55,10 +55,51 @@ class RestApiTestCase(unittest.TestCase):
 
     def test_restify(self):
 
-        member = {'name': 'boris'}
-        result = self.app.post("/restify/member", json.dumps(member))
+        name = 'boris'
+        member = {'name': name}
+
+        #get the current list with items, see how many items we have
+        result = self.app.get("/restify/member/list")
         result = result.json
-        self.assertTrue(result.has_key('id'))
+        count_items = len(result)
+
+        #create a new item
+        result = self.app.post("/restify/member", json.dumps(member))
+        member = result.json
+        self.assertTrue(member.has_key('id'))
+        member_id = member['id']
+
+        #recount he number of items, must be one more
+        result = self.app.get("/restify/member/list")
+        result = result.json
+        self.assertEqual(len(result), count_items + 1)
+        items = [member for member in result if member['id'] == member_id]
+        self.assertEqual(len(items), 1)
+
+        #try to get the single item
+        result = self.app.get("/restify/member/%s" % (member_id, ))
+        result = result.json
+        self.assertEqual(result['id'], member_id)
+
+        #update the name of the item
+        member['name'] = 'henk'
+        result = self.app.put("/restify/member/%s" % (member_id, ), json.dumps(member))
+        result = result.json
+        self.assertEqual(result['name'], member['name'])
+
+        #delete the item
+        result = self.app.delete("/restify/member/%s" % (member_id, ))
+
+        #get the list see if the one is now gone
+        result = self.app.get("/restify/member/list")
+        result = result.json
+        self.assertEqual(len(result), count_items)
+        items = [member for member in result if member['id'] == member_id]
+        self.assertEqual(len(items), 0)
+
+        result = self.app.get("/restify/member/%s" % (member_id, ), status=404)
+        print result
+
 
 def main():
     unittest.main()
