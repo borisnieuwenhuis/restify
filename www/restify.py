@@ -41,6 +41,7 @@ def to_dict(model):
 class RestifyMiddleware(object):
 
     def __init__(self, app, model_class, path):
+        log.info("setting up restify middleware for %s" % path)
         self.app = app
         self.model_class = model_class
         self.path = path

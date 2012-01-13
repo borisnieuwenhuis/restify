@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Restify Crud POC</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le styles -->
+    <link href="bootstrap.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="underscore.js"></script>
+    <script type="text/javascript" src="backbone.js"></script>
+
+    <script type="text/javascript">
+        $(function() {
+            init('member', '#memberlist', '<li><%= name %></li>', '#memberForm');
+        })
+    </script>
+
+  </head>
+
+  <body>
+
+    <div class="topbar">
+      <div class="fill">
+        <div class="container">
+          <a class="brand" href="#">Restify Crud POC</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+        <div class="content">
+            <div class="page-header">
+              <h1>Member Crud<small> admin away</small></h1>
+            </div>
+            <div class="row">
+                <div class="span10">
+                    <h2>Edit Member</h2>
+                    <div class="alert-message error hidden">
+                    </div>
+                    <form id="memberForm">
+                       <fieldset>
+                         <div class="clearfix">
+                           <label for="name">First name</label>
+                           <div class="input">
+                             <input class="xlarge" name="name" size="30" type="text" />
+                           </div>
+
+
+                           <label for="name">Last name</label>
+                           <div class="input">
+                             <input class="xlarge" name="lastname" size="30" type="text" />
+                           </div>
+
+
+                         </div><!-- /clearfix -->
+
+                         <div class="actions">
+                           <input type="submit" class="btn primary" value="Save changes">&nbsp;<button type="reset" class="btn">Cancel</button>
+                         </div>
+                       </fieldset>
+                     </form>
+                </div>
+                <div class="span4">
+                    <h2>Members</h2>
+                    <div id="memberlist">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <p>&copy; Boris Nieuwenhuis 2011</p>
+        </footer>
+    </div> <!-- /container -->
+
+    <script type="text/javascript" src="crud.js"></script>
+  </body>
+</html>
