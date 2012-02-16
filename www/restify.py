@@ -31,7 +31,7 @@ def to_dict(model):
         elif isinstance(value, db.GeoPt):
             output[key] = {'lat': value.lat, 'lon': value.lon}
         elif isinstance(value, db.Model):
-            output[key] = to_dict(value)
+            output[key] = value.key().id()
         else:
             raise ValueError('cannot encode ' + repr(prop))
 
@@ -40,27 +40,35 @@ def to_dict(model):
 
 class RestifyMiddleware(object):
 
-    def __init__(self, app, model_class, path):
-        log.info("setting up restify middleware for %s" % path)
+    def __init__(self, app, model_class, path, modifier = None):
         self.app = app
         self.model_class = model_class
         self.path = path
-        self.base_path = "/restify"
+        self.modifier = modifier
 
     def get_body_dict(self, environ):
         length= int(environ.get('CONTENT_LENGTH', '0'))
         json_body = StringIO(environ['wsgi.input'].read(length)).getvalue()
+        log.info("received json body %s", json_body)
         attrs = json.loads(json_body)
         #convert from unicode
         return dict((str(key), value) for key, value in attrs.iteritems())
 
     def __call__(self, environ, start_response):
-        if environ['PATH_INFO'].startswith("%s/%s" % (self.base_path, self.path)):
-            log.info("request for %s" % (environ['PATH_INFO'], ))
+        if environ['PATH_INFO'].startswith("%s" % (self.path, )):
+            modifier = self.modifier
+            if modifier and modifier.get('ALL'):
+                modifier.get('ALL')()
             if environ['REQUEST_METHOD'] == 'POST':
                 start_response('200 OK', [('Content-Type', 'application/json')])
 
                 attrs = self.get_body_dict(environ)
+                if modifier and modifier.get('POST'):
+                    attrs = modifier.get('POST')(attrs)
+                    log.info("modifier returns %s", attrs)
+                    if attrs:
+                        return [json.dumps(to_dict(attrs))]
+
                 new_object = self.model_class(**attrs)
                 new_object.put()
 
@@ -71,7 +79,11 @@ class RestifyMiddleware(object):
                 if path[-1] == 'list':
                     start_response('200 OK', [('Content-Type', 'application/json')])
                     model_list = self.model_class.all()
-                    return [json.dumps([to_dict(object) for object in model_list])]
+                    model_list.order('-__key__')
+
+                    result = [json.dumps([to_dict(object) for object in model_list.fetch(limit = 10)])]
+                    log.info(result)
+                    return result
                 else:
                     id = int(path[-1])
                     object = self.model_class.get_by_id(id)
@@ -84,6 +96,12 @@ class RestifyMiddleware(object):
                 start_response('200 OK', [('Content-Type', 'application/json')])
 
                 attrs = self.get_body_dict(environ)
+                if modifier and modifier.get('PUT'):
+                    attrs = modifier.get('PUT')(attrs)
+                    log.info("modifier returns %s", attrs)
+                    if attrs:
+                        return [json.dumps(to_dict(attrs))]
+
                 object = self.model_class.get_by_id(attrs['id'])
                 if object:
                     start_response('200 OK', [('Content-Type', 'application/json')])
